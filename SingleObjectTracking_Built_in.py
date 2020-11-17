@@ -31,20 +31,16 @@ def get_best_result(positions, _frames):
 
 if __name__ == '__main__':
     # load video
-    pos_array, frames = load_data_set('./dataset/bird')
-    # 加载正确的检测结果
-    best_frames = get_best_result(pos_array, frames)
+    pos_array, frames = load_data_set('./dataset/jump')
     # set object's initial position
     (x, y, w, h) = tuple(pos_array[0])
     track_window = (x, y, w, h)
     # set up RoI (Region of Interest)
     roi = frames[0][y:y + h, x:x + w]
     # 计算ROI-HSV
-    # TODO: sometimes not necessary
     roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
     print(roi_hsv)
-    # 去除低亮度值
-    # TODO: sometimes not necessary
+    # 计算直方图
     hist_roi = cv2.calcHist([roi_hsv], [2], None, [180], [0, 180])
     # 直方图归一化
     cv2.normalize(hist_roi, hist_roi, 0, 255, cv2.NORM_MINMAX)
