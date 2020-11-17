@@ -9,6 +9,8 @@ np.set_printoptions(threshold=np.inf)
 HIST_TYPE = 'GRAY'
 # mean-shift最大迭代次数
 MAX_ITER_NUM = 10
+# HSV直方图下，特征提取的通道（0-H, 1-S, 2-V）
+HSV_CHANNEL = 2
 
 
 # -------→ Col/x/width
@@ -77,7 +79,7 @@ def get_image_weights(width, height):
     return weight
 
 
-# BIN直方图下，根据像素点位置获取直方图下标索引index
+# 根据像素点位置获取直方图下标索引index
 @jit
 def get_hist_index(i, j, _object):
     if HIST_TYPE == 'BIN':
@@ -89,8 +91,9 @@ def get_hist_index(i, j, _object):
         index = int(_R * 256 + _G * 16 + _B)
     elif HIST_TYPE == 'HSV':
         cvt = cv2.cvtColor(np.copy(_object), cv2.COLOR_BGR2HSV)
+        # 当选择HSV直方图时，需要提供参数channel，代表选择的是H、S or V
         # index = cvt[i, j, 2]
-        index = min(cvt[i, j, 2], 180)
+        index = min(cvt[i, j, HSV_CHANNEL], 180)
     elif HIST_TYPE == 'GRAY':
         cvt = cv2.cvtColor(np.copy(_object), cv2.COLOR_BGR2GRAY)
         index = cvt[i, j]
