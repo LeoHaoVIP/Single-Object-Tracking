@@ -5,6 +5,8 @@ import os
 from numba import jit
 
 np.set_printoptions(threshold=np.inf)
+# 数据集名称
+DATASET_NAME = 'dog'
 # 采用的直方图类型
 HIST_TYPE = 'GRAY'
 # mean-shift最大迭代次数
@@ -199,33 +201,48 @@ def predict_window(prior_window, target_hist, current_frame):
             break
         x_shift_old, y_shift_old = x_shift, y_shift
         iter_num += 1
-        print('window shift vector: ', [x_shift, y_shift])
-        print('iterations: ', iter_num)
+        # print('window shift vector: ', [x_shift, y_shift])
+        # print('iterations: ', iter_num)
     return current_window
 
 
 # 执行目标跟踪
 @jit
 def run_object_detection(first_window, _frames):
+    # 图像输出目录
+    output_dir = './output/{0}/'.format(DATASET_NAME)
     # 目标图像概率直方图
     target_hist = img2prob_histogram(crop_image(first_window, _frames[0]))
     # 直接输出第一张图像的检测结果
-    cv2.imshow('', add_rectangle(first_window, _frames[0]))
-    cv2.waitKey(1)
+    frame_detect = add_rectangle(first_window, _frames[0])
+    os.makedirs(output_dir, exist_ok=True)
+    cv2.imwrite(output_dir + '%04d.jpg' % 0, frame_detect)
     prior_window = first_window
     for i in range(1, len(_frames)):
         # 预测目标在当前帧的位置
         prior_window = predict_window(prior_window, target_hist, _frames[i])
         print(prior_window)
-        cv2.imshow('', add_rectangle(prior_window, _frames[i]))
-        cv2.waitKey(1)
+        frame_detect = add_rectangle(prior_window, _frames[i])
+        cv2.imwrite(output_dir + '%04d.jpg' % i, frame_detect)
+
+
+# 显示检测结果
+def show_detect_result():
+    output_dir = './output/{0}/'.format(DATASET_NAME)
+    file_names = os.listdir(output_dir)
+    for filename in file_names:
+        file_path = os.path.join(output_dir, filename)
+        img = cv2.imread(file_path)
+        cv2.imshow('', img)
+        cv2.waitKey(2)
 
 
 if __name__ == '__main__':
     # 加载视频帧
-    positions, frames, best_frames = load_data_set('./dataset/dog')
+    positions, frames, best_frames = load_data_set('./dataset/' + DATASET_NAME)
     # 设置目标起始位置
     object_first_window = positions[0]
-    # object_first_window = cv2.selectROI('ROI', frames[0])
     # 执行目标检测
     run_object_detection(object_first_window, frames)
+    # 输出跟踪结果
+    show_detect_result()
