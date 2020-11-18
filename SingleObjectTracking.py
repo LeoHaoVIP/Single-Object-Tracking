@@ -6,9 +6,9 @@ from numba import jit
 
 np.set_printoptions(threshold=np.inf)
 # 数据集名称
-DATASET_NAME = 'dog'
+DATASET_NAME = 'bird'
 # 采用的直方图类型
-HIST_TYPE = 'GRAY'
+HIST_TYPE = 'HSV'
 # mean-shift最大迭代次数
 MAX_ITER_NUM = 10
 # HSV直方图下，特征提取的通道（0-H, 1-S, 2-V）
@@ -94,8 +94,7 @@ def get_hist_index(i, j, _object):
     elif HIST_TYPE == 'HSV':
         cvt = cv2.cvtColor(np.copy(_object), cv2.COLOR_BGR2HSV)
         # 当选择HSV直方图时，需要提供参数channel，代表选择的是H、S or V
-        # index = cvt[i, j, 2]
-        index = min(cvt[i, j, HSV_CHANNEL], 180)
+        index = min(cvt[i, j, HSV_CHANNEL], 179)
     elif HIST_TYPE == 'GRAY':
         cvt = cv2.cvtColor(np.copy(_object), cv2.COLOR_BGR2GRAY)
         index = cvt[i, j]
@@ -122,8 +121,16 @@ def img2prob_histogram(_object):
                 # 直方图下标
                 hist_index = get_hist_index(i, j, _object)
                 _histogram[hist_index] += _weight[i, j]
-    elif HIST_TYPE == 'HSV' or HIST_TYPE == 'GRAY':
+    elif HIST_TYPE == 'GRAY':
         hist_size = 256
+        _histogram = np.zeros(hist_size, dtype=np.float32)
+        for i in range(m):
+            for j in range(n):
+                # 直方图下标
+                hist_index = get_hist_index(i, j, _object)
+                _histogram[hist_index] += _weight[i, j]
+    elif HIST_TYPE == 'HSV':
+        hist_size = 180
         _histogram = np.zeros(hist_size, dtype=np.float32)
         for i in range(m):
             for j in range(n):
@@ -217,6 +224,8 @@ def run_object_detection(first_window, _frames):
     frame_detect = add_rectangle(first_window, _frames[0])
     os.makedirs(output_dir, exist_ok=True)
     cv2.imwrite(output_dir + '%04d.jpg' % 0, frame_detect)
+    cv2.imshow('', frame_detect)
+    cv2.waitKey(1)
     prior_window = first_window
     for i in range(1, len(_frames)):
         # 预测目标在当前帧的位置
@@ -224,6 +233,8 @@ def run_object_detection(first_window, _frames):
         print(prior_window)
         frame_detect = add_rectangle(prior_window, _frames[i])
         cv2.imwrite(output_dir + '%04d.jpg' % i, frame_detect)
+        cv2.imshow('',frame_detect)
+        cv2.waitKey(1)
 
 
 # 显示检测结果
@@ -243,6 +254,6 @@ if __name__ == '__main__':
     # 设置目标起始位置
     object_first_window = positions[0]
     # 执行目标检测
-    run_object_detection(object_first_window, frames)
+    # run_object_detection(object_first_window, frames)
     # 输出跟踪结果
     show_detect_result()

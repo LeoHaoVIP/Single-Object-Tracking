@@ -31,7 +31,7 @@ def get_best_result(positions, _frames):
 
 if __name__ == '__main__':
     # load video
-    pos_array, frames = load_data_set('./dataset/jump')
+    pos_array, frames = load_data_set('./dataset/football')
     # set object's initial position
     (x, y, w, h) = tuple(pos_array[0])
     track_window = (x, y, w, h)
@@ -41,11 +41,14 @@ if __name__ == '__main__':
     roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
     print(roi_hsv)
     # 计算直方图
-    hist_roi = cv2.calcHist([roi_hsv], [2], None, [180], [0, 180])
+    hist_roi = cv2.calcHist([roi_hsv], [0], None, [180], [0, 180])
+    print(np.shape(hist_roi))
     # 直方图归一化
     cv2.normalize(hist_roi, hist_roi, 0, 255, cv2.NORM_MINMAX)
+    print('----------')
+    print(np.shape(hist_roi))
     # 设置终止条件，迭代10次或者至少移动1次
-    criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 10)
+    criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
     for i in range(0, len(frames)):
         print(track_window)
         frame = frames[i]
@@ -56,6 +59,6 @@ if __name__ == '__main__':
         # 计算每一帧的hsv图像
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         # 计算反向投影
-        probImage = cv2.calcBackProject([hsv], [2], hist_roi, [0, 180], 1)
+        probImage = cv2.calcBackProject([hsv], [0], hist_roi, [0, 180], 1)
         # 调用meanShift算法在dst中寻找目标窗口，找到后返回目标窗口
         ret, track_window = cv2.meanShift(probImage, track_window, criteria)
