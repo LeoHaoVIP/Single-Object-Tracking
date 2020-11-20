@@ -5,13 +5,13 @@ import os
 from numba import jit
 
 np.set_printoptions(threshold=np.inf)
-# 数据集名称
+# Adjustable  数据集名称 [bird、girl_in_the_sea、girl_in_the_alley、girl_in_the_garden]
 DATASET_NAME = 'bird'
-# 采用的直方图类型
-HIST_TYPE = 'HSV'
-# mean-shift最大迭代次数
+# Adjustable 采用的直方图类型
+HIST_TYPE = 'BIN'
+# Adjustable mean-shift最大迭代次数
 MAX_ITER_NUM = 10
-# HSV直方图下，特征提取的通道（0-H, 1-S, 2-V）
+# Adjustable HSV直方图下，特征提取的通道（0-H, 1-S, 2-V）
 HSV_CHANNEL = 2
 
 
@@ -23,12 +23,12 @@ HSV_CHANNEL = 2
 # Row/y/height
 
 # 加载图像数据集
-@jit
 def load_data_set(path):
-    _positions = np.loadtxt(path + './groundtruth_rect.txt', delimiter=',', dtype=int)
+    first_window = np.loadtxt(path + './first_window.txt', delimiter=',', dtype=int)
     _frames = []
-    _best_frames = []
     file_names = os.listdir(path)
+    file_names.remove('first_window.txt')
+    file_names.sort(key=lambda x: int(x.replace(' ', '').split('.')[0]))
     for i in range(len(file_names)):
         filename = file_names[i]
         if not (filename.endswith('jpg') or filename.endswith('png')):
@@ -36,8 +36,7 @@ def load_data_set(path):
         file_path = os.path.join(path, filename)
         img = cv2.imread(file_path)
         _frames.append(img)
-        _best_frames.append(add_rectangle(_positions[i], img))
-    return _positions, _frames, _best_frames
+    return first_window, _frames
 
 
 # 截取图像
@@ -202,7 +201,7 @@ def predict_window(prior_window, target_hist, current_frame):
         if iter_num >= MAX_ITER_NUM:
             # 迭代次数达到上限，说明目标极有可能丢失，此时目标窗口不变，等待目标重新出现
             # 这里没有用到巴氏距离，原因是为了防止迭代次数过多
-            current_window = prior_window
+            # current_window = prior_window
             break
         if abs(x_shift - x_shift_old) < 1e-6 and abs(y_shift - y_shift_old) < 1e-6:
             break
@@ -228,12 +227,13 @@ def run_object_detection(first_window, _frames):
     cv2.waitKey(1)
     prior_window = first_window
     for i in range(1, len(_frames)):
+        print(i)
         # 预测目标在当前帧的位置
         prior_window = predict_window(prior_window, target_hist, _frames[i])
         print(prior_window)
         frame_detect = add_rectangle(prior_window, _frames[i])
         cv2.imwrite(output_dir + '%04d.jpg' % i, frame_detect)
-        cv2.imshow('',frame_detect)
+        cv2.imshow('', frame_detect)
         cv2.waitKey(1)
 
 
@@ -241,19 +241,24 @@ def run_object_detection(first_window, _frames):
 def show_detect_result():
     output_dir = './output/{0}/'.format(DATASET_NAME)
     file_names = os.listdir(output_dir)
+    i = 0
+    ids = np.arange(0, len(file_names))
     for filename in file_names:
-        file_path = os.path.join(output_dir, filename)
-        img = cv2.imread(file_path)
-        cv2.imshow('', img)
-        cv2.waitKey(2)
+        if i in ids:
+            file_path = os.path.join(output_dir, filename)
+            img = cv2.imread(file_path)
+            cv2.imshow(DATASET_NAME, img)
+            cv2.waitKey(20)
+        i += 1
 
 
 if __name__ == '__main__':
     # 加载视频帧
-    positions, frames, best_frames = load_data_set('./dataset/' + DATASET_NAME)
-    # 设置目标起始位置
-    object_first_window = positions[0]
+    object_first_window, frames = load_data_set('./dataset/' + DATASET_NAME)
+    # 手动设定ROI（首帧目标区域）
+    # object_first_window = cv2.selectROI('', frames[0])
+    print(object_first_window)
     # 执行目标检测
-    # run_object_detection(object_first_window, frames)
+    run_object_detection(object_first_window, frames)
     # 输出跟踪结果
     show_detect_result()
