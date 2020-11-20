@@ -16,15 +16,14 @@ JUST CLONE THE REPOSITORY AND RUN IT!
 
 ## Results Representation
 + Demo Frame
-
   ------
-
   ![img_result_1](./doc_imgs_folder/bird.jpg)
   ![img_result_2](./doc_imgs_folder/girl_in_the_sea.jpg)
   ![img_result_3](./doc_imgs_folder/girl_in_the_alley.jpg)
   ![img_result_4](./doc_imgs_folder/girl_in_the_garden.jpg)
 
 + Demo Video
+  ------
 [![video_result](./doc_imgs_folder/bird_0.jpg)](./doc_imgs_folder/bird.mp4)
 [![video_result](./doc_imgs_folder/girl_in_the_sea_0.jpg)](./doc_imgs_folder/girl_in_the_sea.mp4)
 [![video_result](./doc_imgs_folder/girl_in_the_alley_0.jpg)](./doc_imgs_folder/girl_in_the_alley.mp4)
