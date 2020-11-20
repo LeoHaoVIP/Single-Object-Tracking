@@ -93,7 +93,7 @@ def get_hist_index(i, j, _object):
     elif HIST_TYPE == 'HSV':
         cvt = cv2.cvtColor(np.copy(_object), cv2.COLOR_BGR2HSV)
         # 当选择HSV直方图时，需要提供参数channel，代表选择的是H、S or V
-        index = min(cvt[i, j, HSV_CHANNEL], 179)
+        index = min(cvt[i, j, HSV_CHANNEL], 255)
     elif HIST_TYPE == 'GRAY':
         cvt = cv2.cvtColor(np.copy(_object), cv2.COLOR_BGR2GRAY)
         index = cvt[i, j]
@@ -103,9 +103,9 @@ def get_hist_index(i, j, _object):
 
 
 # 获取指定图像的概率直方图，直方图类型有三种：
-# BIN-将RGB颜色空间量化为16x16x16
-# HSV-将RGB颜色空间转化内HSV，取H通道[0,180]
-# GRAY-灰度颜色空间：255*255*255
+# BIN-将RGB颜色空间量化为16x16x16=4096
+# HSV-将RGB颜色空间转化内HSV，取H/S/V通道 256
+# GRAY-灰度颜色空间：256
 @jit
 def img2prob_histogram(_object):
     [m, n, _] = np.shape(_object)
